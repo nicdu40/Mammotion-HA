@@ -517,12 +517,22 @@ def async_setup_services(hass: HomeAssistant) -> None:  # noqa: C901
         # return the device_hash from the last send.
         if isinstance(msg, list):
             last_result = None
-            for m in msg:
-                if "x_move" in call.data and hasattr(m, "svg_message"):
-                    m.svg_message.x_move = call.data["x_move"]
-                if "y_move" in call.data and hasattr(m, "svg_message"):
-                    m.svg_message.y_move = call.data["y_move"]
-                last_result = await coordinator.send_svg_command(m)
+            for item in msg:
+                # support nested lists returned by some pymammotion versions
+                if isinstance(item, list):
+                    for m in item:
+                        if "x_move" in call.data and hasattr(m, "svg_message"):
+                            m.svg_message.x_move = call.data["x_move"]
+                        if "y_move" in call.data and hasattr(m, "svg_message"):
+                            m.svg_message.y_move = call.data["y_move"]
+                        last_result = await coordinator.send_svg_command(m)
+                else:
+                    m = item
+                    if "x_move" in call.data and hasattr(m, "svg_message"):
+                        m.svg_message.x_move = call.data["x_move"]
+                    if "y_move" in call.data and hasattr(m, "svg_message"):
+                        m.svg_message.y_move = call.data["y_move"]
+                    last_result = await coordinator.send_svg_command(m)
             return {"device_hash": str(last_result)}
 
         if "x_move" in call.data and hasattr(msg, "svg_message"):
@@ -566,12 +576,22 @@ def async_setup_services(hass: HomeAssistant) -> None:  # noqa: C901
         # return the device_hash from the last send.
         if isinstance(msg, list):
             last_result = None
-            for m in msg:
-                if "x_move" in call.data and hasattr(m, "svg_message"):
-                    m.svg_message.x_move = call.data["x_move"]
-                if "y_move" in call.data and hasattr(m, "svg_message"):
-                    m.svg_message.y_move = call.data["y_move"]
-                last_result = await coordinator.send_svg_command(m)
+            for item in msg:
+                # support nested lists returned by some pymammotion versions
+                if isinstance(item, list):
+                    for m in item:
+                        if "x_move" in call.data and hasattr(m, "svg_message"):
+                            m.svg_message.x_move = call.data["x_move"]
+                        if "y_move" in call.data and hasattr(m, "svg_message"):
+                            m.svg_message.y_move = call.data["y_move"]
+                        last_result = await coordinator.send_svg_command(m)
+                else:
+                    m = item
+                    if "x_move" in call.data and hasattr(m, "svg_message"):
+                        m.svg_message.x_move = call.data["x_move"]
+                    if "y_move" in call.data and hasattr(m, "svg_message"):
+                        m.svg_message.y_move = call.data["y_move"]
+                    last_result = await coordinator.send_svg_command(m)
             return {"device_hash": str(last_result)}
 
         if "x_move" in call.data and hasattr(msg, "svg_message"):
