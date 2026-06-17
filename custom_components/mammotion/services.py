@@ -530,6 +530,12 @@ def async_setup_services(hass: HomeAssistant) -> None:  # noqa: C901
                     m.svg_message.x_move = call.data["x_move"]
                 if "y_move" in call.data and hasattr(m, "svg_message"):
                     m.svg_message.y_move = call.data["y_move"]
+                LOGGER.debug(
+                    "sending svg chunk: type=%s has_svg_message=%s repr=%s",
+                    type(m),
+                    hasattr(m, "svg_message"),
+                    repr(m)[:200],
+                )
                 last_result = await coordinator.send_svg_command(m)
             return {"device_hash": str(last_result)}
 
@@ -582,6 +588,12 @@ def async_setup_services(hass: HomeAssistant) -> None:  # noqa: C901
                             m.svg_message.x_move = call.data["x_move"]
                         if "y_move" in call.data and hasattr(m, "svg_message"):
                             m.svg_message.y_move = call.data["y_move"]
+                        LOGGER.debug(
+                            "sending svg chunk: type=%s has_svg_message=%s repr=%s",
+                            type(m),
+                            hasattr(m, "svg_message"),
+                            repr(m)[:200],
+                        )
                         last_result = await coordinator.send_svg_command(m)
                 else:
                     m = item
