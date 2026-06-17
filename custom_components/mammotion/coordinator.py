@@ -1094,7 +1094,9 @@ class MammotionBaseUpdateCoordinator[DataT](DataUpdateCoordinator[DataT]):  # ty
             # chunk internally). Do NOT pass the pre-chunked list back to
             # the client or the client will attempt to chunk again.
             if hasattr(svg_message, "svg_message"):
-                return await self.manager.send_svg(self.device_name, svg_message)
+                return await self.manager.send_svg(
+                    self.device_name, svg_message, prefer_ble=True
+                )
 
             # Otherwise treat it as an iterable/sequence and send each
             last_hash = None
@@ -1105,7 +1107,9 @@ class MammotionBaseUpdateCoordinator[DataT](DataUpdateCoordinator[DataT]):  # ty
                 # Let the client handle chunking; pass the concrete SvgMessage
                 # object so the client can perform its internal checks and
                 # chunking logic consistently.
-                last_hash = await self.manager.send_svg(self.device_name, m)
+                last_hash = await self.manager.send_svg(
+                    self.device_name, m, prefer_ble=True
+                )
             return last_hash
         except Exception:
             raise
