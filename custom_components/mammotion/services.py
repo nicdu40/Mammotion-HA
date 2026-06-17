@@ -566,14 +566,58 @@ def async_setup_services(hass: HomeAssistant) -> None:  # noqa: C901
                     True,
                     repr(m)[:200],
                 )
-                last_result = await coordinator.send_svg_command(m)
+                try:
+                    last_result = await coordinator.send_svg_command(m)
+                except Exception as exc:  # capture problematic object details
+                    try:
+                        svg_msg = getattr(m, "svg_message", None)
+                        svg_type = type(svg_msg)
+                        svg_len = (
+                            len(getattr(svg_msg, "svg_file_data", ""))
+                            if svg_msg is not None
+                            else None
+                        )
+                    except Exception:
+                        svg_type = None
+                        svg_len = None
+                    LOGGER.exception(
+                        "send_svg_command raised (%s) for object type=%s repr=%s svg_message_type=%s svg_file_data_len=%s",
+                        exc,
+                        type(m),
+                        repr(m)[:200],
+                        svg_type,
+                        svg_len,
+                    )
+                    raise
             return {"device_hash": str(last_result)}
 
         if "x_move" in call.data and hasattr(msg, "svg_message"):
             msg.svg_message.x_move = call.data["x_move"]
         if "y_move" in call.data and hasattr(msg, "svg_message"):
             msg.svg_message.y_move = call.data["y_move"]
-        result = await coordinator.send_svg_command(msg)
+        try:
+            result = await coordinator.send_svg_command(msg)
+        except Exception as exc:
+            try:
+                svg_msg = getattr(msg, "svg_message", None)
+                svg_type = type(svg_msg)
+                svg_len = (
+                    len(getattr(svg_msg, "svg_file_data", ""))
+                    if svg_msg is not None
+                    else None
+                )
+            except Exception:
+                svg_type = None
+                svg_len = None
+            LOGGER.exception(
+                "send_svg_command raised (%s) for object type=%s repr=%s svg_message_type=%s svg_file_data_len=%s",
+                exc,
+                type(msg),
+                repr(msg)[:200],
+                svg_type,
+                svg_len,
+            )
+            raise
         return {"device_hash": str(result)}
 
     async def handle_svg_update(call: ServiceCall) -> dict[str, Any]:
@@ -641,14 +685,58 @@ def async_setup_services(hass: HomeAssistant) -> None:  # noqa: C901
                     True,
                     repr(m)[:200],
                 )
-                last_result = await coordinator.send_svg_command(m)
+                try:
+                    last_result = await coordinator.send_svg_command(m)
+                except Exception as exc:
+                    try:
+                        svg_msg = getattr(m, "svg_message", None)
+                        svg_type = type(svg_msg)
+                        svg_len = (
+                            len(getattr(svg_msg, "svg_file_data", ""))
+                            if svg_msg is not None
+                            else None
+                        )
+                    except Exception:
+                        svg_type = None
+                        svg_len = None
+                    LOGGER.exception(
+                        "send_svg_command raised (%s) for object type=%s repr=%s svg_message_type=%s svg_file_data_len=%s",
+                        exc,
+                        type(m),
+                        repr(m)[:200],
+                        svg_type,
+                        svg_len,
+                    )
+                    raise
             return {"device_hash": str(last_result)}
 
         if "x_move" in call.data and hasattr(msg, "svg_message"):
             msg.svg_message.x_move = call.data["x_move"]
         if "y_move" in call.data and hasattr(msg, "svg_message"):
             msg.svg_message.y_move = call.data["y_move"]
-        result = await coordinator.send_svg_command(msg)
+        try:
+            result = await coordinator.send_svg_command(msg)
+        except Exception as exc:
+            try:
+                svg_msg = getattr(msg, "svg_message", None)
+                svg_type = type(svg_msg)
+                svg_len = (
+                    len(getattr(svg_msg, "svg_file_data", ""))
+                    if svg_msg is not None
+                    else None
+                )
+            except Exception:
+                svg_type = None
+                svg_len = None
+            LOGGER.exception(
+                "send_svg_command raised (%s) for object type=%s repr=%s svg_message_type=%s svg_file_data_len=%s",
+                exc,
+                type(msg),
+                repr(msg)[:200],
+                svg_type,
+                svg_len,
+            )
+            raise
         return {"device_hash": str(result)}
 
     async def handle_svg_delete(call: ServiceCall) -> dict[str, Any]:
@@ -692,10 +780,54 @@ def async_setup_services(hass: HomeAssistant) -> None:  # noqa: C901
                     True,
                     repr(m)[:200],
                 )
-                last_result = await mower.reporting_coordinator.send_svg_command(m)
+                try:
+                    last_result = await mower.reporting_coordinator.send_svg_command(m)
+                except Exception as exc:
+                    try:
+                        svg_msg = getattr(m, "svg_message", None)
+                        svg_type = type(svg_msg)
+                        svg_len = (
+                            len(getattr(svg_msg, "svg_file_data", ""))
+                            if svg_msg is not None
+                            else None
+                        )
+                    except Exception:
+                        svg_type = None
+                        svg_len = None
+                    LOGGER.exception(
+                        "send_svg_command (delete) raised (%s) for object type=%s repr=%s svg_message_type=%s svg_file_data_len=%s",
+                        exc,
+                        type(m),
+                        repr(m)[:200],
+                        svg_type,
+                        svg_len,
+                    )
+                    raise
             return {}
 
-        await mower.reporting_coordinator.send_svg_command(msg)
+        try:
+            await mower.reporting_coordinator.send_svg_command(msg)
+        except Exception as exc:
+            try:
+                svg_msg = getattr(msg, "svg_message", None)
+                svg_type = type(svg_msg)
+                svg_len = (
+                    len(getattr(svg_msg, "svg_file_data", ""))
+                    if svg_msg is not None
+                    else None
+                )
+            except Exception:
+                svg_type = None
+                svg_len = None
+            LOGGER.exception(
+                "send_svg_command (delete) raised (%s) for object type=%s repr=%s svg_message_type=%s svg_file_data_len=%s",
+                exc,
+                type(msg),
+                repr(msg)[:200],
+                svg_type,
+                svg_len,
+            )
+            raise
         return {}
 
     hass.services.async_register(
