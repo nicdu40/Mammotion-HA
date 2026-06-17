@@ -536,10 +536,20 @@ def async_setup_services(hass: HomeAssistant) -> None:  # noqa: C901
         # treat any return that doesn't look like a single SvgMessage as
         # a sequence of messages (handles custom sequence types from
         # pymammotion that are not plain lists)
-        if not hasattr(msg, "svg_message"):
+        try:
+            from pymammotion.data.model.hash_list import SvgMessage  # type: ignore
+        except Exception:
+            SvgMessage = None
+
+        def is_svg_msg(obj):
+            if SvgMessage is not None:
+                return isinstance(obj, SvgMessage)
+            return hasattr(obj, "svg_message")
+
+        if not is_svg_msg(msg):
             last_result = None
             for m in flatten_messages(msg):
-                if not hasattr(m, "svg_message"):
+                if not is_svg_msg(m):
                     LOGGER.debug(
                         "skipping non-svg_message chunk: type=%s repr=%s",
                         type(m),
