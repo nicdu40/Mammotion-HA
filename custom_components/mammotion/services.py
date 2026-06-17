@@ -589,7 +589,8 @@ def async_setup_services(hass: HomeAssistant) -> None:  # noqa: C901
                         svg_len,
                     )
                     raise
-            return {"device_hash": str(last_result)}
+            # return numeric device_hash so follow-up calls expect an int
+            return {"device_hash": last_result}
 
         if "x_move" in call.data and hasattr(msg, "svg_message"):
             msg.svg_message.x_move = call.data["x_move"]
@@ -618,7 +619,7 @@ def async_setup_services(hass: HomeAssistant) -> None:  # noqa: C901
                 svg_len,
             )
             raise
-        return {"device_hash": str(result)}
+        return {"device_hash": result}
 
     async def handle_svg_update(call: ServiceCall) -> dict[str, Any]:
         from pymammotion.data.model.device import MowingDevice  # noqa: PLC0415
