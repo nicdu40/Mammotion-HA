@@ -578,33 +578,30 @@ def async_setup_services(hass: HomeAssistant) -> None:  # noqa: C901
             base_width_m=call.data["base_width_m"],
             base_height_m=call.data["base_height_m"],
         )
-        # build_svg_update may return a single message or a list of
-        # messages. If it's a list, send each message separately and
-        # return the device_hash from the last send.
-        if isinstance(msg, list):
-            last_result = None
-            for item in msg:
-                # support nested lists returned by some pymammotion versions
-                if isinstance(item, list):
-                    for m in item:
-                        if "x_move" in call.data and hasattr(m, "svg_message"):
-                            m.svg_message.x_move = call.data["x_move"]
-                        if "y_move" in call.data and hasattr(m, "svg_message"):
-                            m.svg_message.y_move = call.data["y_move"]
-                        LOGGER.debug(
-                            "sending svg chunk: type=%s has_svg_message=%s repr=%s",
-                            type(m),
-                            hasattr(m, "svg_message"),
-                            repr(m)[:200],
-                        )
-                        last_result = await coordinator.send_svg_command(m)
+        # build_svg_update may return a single message or a sequence of
+        # messages. Treat any return without `svg_message` as iterable
+        # and fully flatten nested sequences before sending.
+        def flatten_messages(items):
+            for it in items:
+                if isinstance(it, (list, tuple)):
+                    yield from flatten_messages(it)
                 else:
-                    m = item
-                    if "x_move" in call.data and hasattr(m, "svg_message"):
-                        m.svg_message.x_move = call.data["x_move"]
-                    if "y_move" in call.data and hasattr(m, "svg_message"):
-                        m.svg_message.y_move = call.data["y_move"]
-                    last_result = await coordinator.send_svg_command(m)
+                    yield it
+
+        if not hasattr(msg, "svg_message"):
+            last_result = None
+            for m in flatten_messages(msg):
+                if "x_move" in call.data and hasattr(m, "svg_message"):
+                    m.svg_message.x_move = call.data["x_move"]
+                if "y_move" in call.data and hasattr(m, "svg_message"):
+                    m.svg_message.y_move = call.data["y_move"]
+                LOGGER.debug(
+                    "sending svg chunk: type=%s has_svg_message=%s repr=%s",
+                    type(m),
+                    hasattr(m, "svg_message"),
+                    repr(m)[:200],
+                )
+                last_result = await coordinator.send_svg_command(m)
             return {"device_hash": str(last_result)}
 
         if "x_move" in call.data and hasattr(msg, "svg_message"):
