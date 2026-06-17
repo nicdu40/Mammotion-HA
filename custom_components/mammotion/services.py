@@ -622,6 +622,26 @@ def async_setup_services(hass: HomeAssistant) -> None:  # noqa: C901
             device_hash=call.data["device_hash"],
             area_hash=call.data["area_hash"],
         )
+
+        def flatten_messages(items):
+            for it in items:
+                if isinstance(it, (list, tuple)):
+                    yield from flatten_messages(it)
+                else:
+                    yield it
+
+        if not hasattr(msg, "svg_message"):
+            last_result = None
+            for m in flatten_messages(msg):
+                LOGGER.debug(
+                    "sending svg chunk (delete): type=%s has_svg_message=%s repr=%s",
+                    type(m),
+                    hasattr(m, "svg_message"),
+                    repr(m)[:200],
+                )
+                last_result = await mower.reporting_coordinator.send_svg_command(m)
+            return {}
+
         await mower.reporting_coordinator.send_svg_command(msg)
         return {}
 
