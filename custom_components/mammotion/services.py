@@ -512,9 +512,22 @@ def async_setup_services(hass: HomeAssistant) -> None:  # noqa: C901
             base_width_m=call.data["base_width_m"],
             base_height_m=call.data["base_height_m"],
         )
-        if "x_move" in call.data:
+        # build_svg_for_area may return a single message or a list of
+        # messages. If it's a list, send each message separately and
+        # return the device_hash from the last send.
+        if isinstance(msg, list):
+            last_result = None
+            for m in msg:
+                if "x_move" in call.data and hasattr(m, "svg_message"):
+                    m.svg_message.x_move = call.data["x_move"]
+                if "y_move" in call.data and hasattr(m, "svg_message"):
+                    m.svg_message.y_move = call.data["y_move"]
+                last_result = await coordinator.send_svg_command(m)
+            return {"device_hash": str(last_result)}
+
+        if "x_move" in call.data and hasattr(msg, "svg_message"):
             msg.svg_message.x_move = call.data["x_move"]
-        if "y_move" in call.data:
+        if "y_move" in call.data and hasattr(msg, "svg_message"):
             msg.svg_message.y_move = call.data["y_move"]
         result = await coordinator.send_svg_command(msg)
         return {"device_hash": str(result)}
@@ -548,9 +561,22 @@ def async_setup_services(hass: HomeAssistant) -> None:  # noqa: C901
             base_width_m=call.data["base_width_m"],
             base_height_m=call.data["base_height_m"],
         )
-        if "x_move" in call.data:
+        # build_svg_update may return a single message or a list of
+        # messages. If it's a list, send each message separately and
+        # return the device_hash from the last send.
+        if isinstance(msg, list):
+            last_result = None
+            for m in msg:
+                if "x_move" in call.data and hasattr(m, "svg_message"):
+                    m.svg_message.x_move = call.data["x_move"]
+                if "y_move" in call.data and hasattr(m, "svg_message"):
+                    m.svg_message.y_move = call.data["y_move"]
+                last_result = await coordinator.send_svg_command(m)
+            return {"device_hash": str(last_result)}
+
+        if "x_move" in call.data and hasattr(msg, "svg_message"):
             msg.svg_message.x_move = call.data["x_move"]
-        if "y_move" in call.data:
+        if "y_move" in call.data and hasattr(msg, "svg_message"):
             msg.svg_message.y_move = call.data["y_move"]
         result = await coordinator.send_svg_command(msg)
         return {"device_hash": str(result)}
