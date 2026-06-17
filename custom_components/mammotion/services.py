@@ -523,7 +523,10 @@ def async_setup_services(hass: HomeAssistant) -> None:  # noqa: C901
                 else:
                     yield it
 
-        if isinstance(msg, list):
+        # treat any return that doesn't look like a single SvgMessage as
+        # a sequence of messages (handles custom sequence types from
+        # pymammotion that are not plain lists)
+        if not hasattr(msg, "svg_message"):
             last_result = None
             for m in flatten_messages(msg):
                 if "x_move" in call.data and hasattr(m, "svg_message"):
