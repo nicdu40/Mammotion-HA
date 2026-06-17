@@ -516,9 +516,19 @@ def async_setup_services(hass: HomeAssistant) -> None:  # noqa: C901
         # messages. If it's a list, send each message separately and
         # return the device_hash from the last send.  Some pymammotion
         # versions may return nested lists; fully flatten them.
+        from collections.abc import Iterable
+
         def flatten_messages(items):
             for it in items:
-                if isinstance(it, (list, tuple)):
+                # Treat custom sequence types (iterable) that don't expose
+                # `svg_message` as containers to be flattened. Avoid
+                # flattening strings/bytes/dicts which are iterable but are
+                # terminal values.
+                if (
+                    not hasattr(it, "svg_message")
+                    and isinstance(it, Iterable)
+                    and not isinstance(it, (str, bytes, bytearray, dict))
+                ):
                     yield from flatten_messages(it)
                 else:
                     yield it
@@ -529,14 +539,21 @@ def async_setup_services(hass: HomeAssistant) -> None:  # noqa: C901
         if not hasattr(msg, "svg_message"):
             last_result = None
             for m in flatten_messages(msg):
-                if "x_move" in call.data and hasattr(m, "svg_message"):
+                if not hasattr(m, "svg_message"):
+                    LOGGER.debug(
+                        "skipping non-svg_message chunk: type=%s repr=%s",
+                        type(m),
+                        repr(m)[:200],
+                    )
+                    continue
+                if "x_move" in call.data:
                     m.svg_message.x_move = call.data["x_move"]
-                if "y_move" in call.data and hasattr(m, "svg_message"):
+                if "y_move" in call.data:
                     m.svg_message.y_move = call.data["y_move"]
                 LOGGER.debug(
                     "sending svg chunk: type=%s has_svg_message=%s repr=%s",
                     type(m),
-                    hasattr(m, "svg_message"),
+                    True,
                     repr(m)[:200],
                 )
                 last_result = await coordinator.send_svg_command(m)
@@ -581,9 +598,15 @@ def async_setup_services(hass: HomeAssistant) -> None:  # noqa: C901
         # build_svg_update may return a single message or a sequence of
         # messages. Treat any return without `svg_message` as iterable
         # and fully flatten nested sequences before sending.
+        from collections.abc import Iterable
+
         def flatten_messages(items):
             for it in items:
-                if isinstance(it, (list, tuple)):
+                if (
+                    not hasattr(it, "svg_message")
+                    and isinstance(it, Iterable)
+                    and not isinstance(it, (str, bytes, bytearray, dict))
+                ):
                     yield from flatten_messages(it)
                 else:
                     yield it
@@ -591,14 +614,21 @@ def async_setup_services(hass: HomeAssistant) -> None:  # noqa: C901
         if not hasattr(msg, "svg_message"):
             last_result = None
             for m in flatten_messages(msg):
-                if "x_move" in call.data and hasattr(m, "svg_message"):
+                if not hasattr(m, "svg_message"):
+                    LOGGER.debug(
+                        "skipping non-svg_message chunk: type=%s repr=%s",
+                        type(m),
+                        repr(m)[:200],
+                    )
+                    continue
+                if "x_move" in call.data:
                     m.svg_message.x_move = call.data["x_move"]
-                if "y_move" in call.data and hasattr(m, "svg_message"):
+                if "y_move" in call.data:
                     m.svg_message.y_move = call.data["y_move"]
                 LOGGER.debug(
                     "sending svg chunk: type=%s has_svg_message=%s repr=%s",
                     type(m),
-                    hasattr(m, "svg_message"),
+                    True,
                     repr(m)[:200],
                 )
                 last_result = await coordinator.send_svg_command(m)
@@ -623,9 +653,15 @@ def async_setup_services(hass: HomeAssistant) -> None:  # noqa: C901
             area_hash=call.data["area_hash"],
         )
 
+        from collections.abc import Iterable
+
         def flatten_messages(items):
             for it in items:
-                if isinstance(it, (list, tuple)):
+                if (
+                    not hasattr(it, "svg_message")
+                    and isinstance(it, Iterable)
+                    and not isinstance(it, (str, bytes, bytearray, dict))
+                ):
                     yield from flatten_messages(it)
                 else:
                     yield it
@@ -633,10 +669,17 @@ def async_setup_services(hass: HomeAssistant) -> None:  # noqa: C901
         if not hasattr(msg, "svg_message"):
             last_result = None
             for m in flatten_messages(msg):
+                if not hasattr(m, "svg_message"):
+                    LOGGER.debug(
+                        "skipping non-svg_message chunk (delete): type=%s repr=%s",
+                        type(m),
+                        repr(m)[:200],
+                    )
+                    continue
                 LOGGER.debug(
                     "sending svg chunk (delete): type=%s has_svg_message=%s repr=%s",
                     type(m),
-                    hasattr(m, "svg_message"),
+                    True,
                     repr(m)[:200],
                 )
                 last_result = await mower.reporting_coordinator.send_svg_command(m)
