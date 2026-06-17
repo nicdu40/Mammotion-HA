@@ -1071,8 +1071,40 @@ class MammotionBaseUpdateCoordinator[DataT](DataUpdateCoordinator[DataT]):  # ty
 
         """
 
-        chunks = chunk_svg_messages(svg_message)
-        return await self.manager.send_svg(self.device_name, chunks)
+        # Accept either a single SvgMessage or a sequence (including nested
+        # sequences) of SvgMessage objects. Some pymammotion utility builders
+        # may return lists or custom sequence types; flatten them here so the
+        # lower-level client always receives a concrete SvgMessage.
+        from collections.abc import Iterable
+
+        def flatten_items(items):
+            for it in items:
+                if (
+                    not hasattr(it, "svg_message")
+                    and isinstance(it, Iterable)
+                    and not isinstance(it, (str, bytes, bytearray, dict))
+                ):
+                    yield from flatten_items(it)
+                else:
+                    yield it
+
+        try:
+            # If it's a concrete SvgMessage, send it directly.
+            if hasattr(svg_message, "svg_message"):
+                chunks = chunk_svg_messages(svg_message)
+                return await self.manager.send_svg(self.device_name, chunks)
+
+            # Otherwise treat it as an iterable/sequence and send each
+            last_hash = None
+            for m in flatten_items(svg_message):
+                if not hasattr(m, "svg_message"):
+                    LOGGER.debug("Skipping non-SvgMessage item in send_svg_command: %s", type(m))
+                    continue
+                chunks = chunk_svg_messages(m)
+                last_hash = await self.manager.send_svg(self.device_name, chunks)
+            return last_hash
+        except Exception:
+            raise
 
     def generate_route_information(
         self, operation_settings: OperationSettings
