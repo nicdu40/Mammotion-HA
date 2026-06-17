@@ -1089,10 +1089,12 @@ class MammotionBaseUpdateCoordinator[DataT](DataUpdateCoordinator[DataT]):  # ty
                     yield it
 
         try:
-            # If it's a concrete SvgMessage, send it directly.
+            # If it's a concrete SvgMessage, send it directly.  The
+            # MammotionClient.send_svg() expects a SvgMessage (it will
+            # chunk internally). Do NOT pass the pre-chunked list back to
+            # the client or the client will attempt to chunk again.
             if hasattr(svg_message, "svg_message"):
-                chunks = chunk_svg_messages(svg_message)
-                return await self.manager.send_svg(self.device_name, chunks)
+                return await self.manager.send_svg(self.device_name, svg_message)
 
             # Otherwise treat it as an iterable/sequence and send each
             last_hash = None
@@ -1100,8 +1102,10 @@ class MammotionBaseUpdateCoordinator[DataT](DataUpdateCoordinator[DataT]):  # ty
                 if not hasattr(m, "svg_message"):
                     LOGGER.debug("Skipping non-SvgMessage item in send_svg_command: %s", type(m))
                     continue
-                chunks = chunk_svg_messages(m)
-                last_hash = await self.manager.send_svg(self.device_name, chunks)
+                # Let the client handle chunking; pass the concrete SvgMessage
+                # object so the client can perform its internal checks and
+                # chunking logic consistently.
+                last_hash = await self.manager.send_svg(self.device_name, m)
             return last_hash
         except Exception:
             raise
